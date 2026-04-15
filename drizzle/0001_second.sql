@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `lastname` varchar(255) NOT NULL;

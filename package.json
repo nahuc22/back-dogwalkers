@@ -1,0 +1,45 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/server.js",
+    "build": "tsc",
+    "dev": "tsc && concurrently \"tsc -w\"  \"nodemon dist/server\"  ",
+    "seed": "tsc && node dist/scripts/seed.js",
+    "view-users": "tsc && node dist/scripts/viewUsers.js",
+    "db-config": "tsc && node dist/scripts/showDbConfig.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "class-validator": "^0.14.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.36.4",
+    "express": "^4.21.1",
+    "http-status-codes": "^2.3.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.11.4",
+    "typeorm": "^0.3.20",
+    "typeorm-naming-strategies": "^4.1.0",
+    "typescript": "^5.6.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/dotenv": "^8.2.3",
+    "@types/express": "^5.0.0",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.10.1",
+    "concurrently": "^9.1.0",
+    "drizzle-kit": "^0.28.1",
+    "nodemon": "^3.1.7"
+  }
+}
