@@ -49,11 +49,17 @@ export async function updateWalkerProfileService(userId: number, profileData: Up
 /**
  * Obtener todos los walkers
  */
-export async function getAllWalkersService() {
+export async function getAllWalkersService(location?: string, limit: number = 20) {
   try {
     const walkers = await db
       .select()
       .from(walkersTable)
+      .where(
+        location 
+          ? sql`(${walkersTable.location} LIKE ${`%${location}%`} OR ${walkersTable.location} IS NULL OR ${walkersTable.location} = '')`
+          : sql`1=1`
+      )
+      .limit(limit)
       .execute();
 
     return walkers;

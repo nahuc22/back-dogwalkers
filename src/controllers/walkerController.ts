@@ -75,16 +75,10 @@ export const getAllWalkers = handler({
   async handler(req) {
     try {
       const location = req.query?.location;
-      const limit = req.query?.limit ? parseInt(req.query.limit) : 10;
+      const limit = req.query?.limit ? parseInt(req.query.limit) : 20;
       
-      // Si hay ubicación, buscar walkers cercanos
-      if (location) {
-        const walkers = await getNearbyWalkersService(location, limit);
-        return walkers;
-      }
-      
-      // Si no hay ubicación, retornar todos los walkers
-      const walkers = await getAllWalkersService();
+      // Obtener walkers con filtro de location (incluye NULL/vacíos si se especifica location)
+      const walkers = await getAllWalkersService(location, limit);
       return walkers;
     } catch (error) {
       if (error instanceof ServiceError) {
