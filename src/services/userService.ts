@@ -1,9 +1,11 @@
-import { db } from "../db"; // Asegúrate de exportar tu instancia de Drizzle
+import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { usersTable } from "../db/schema/users";
-import { UserRegistration , UserLogin } from "../schemas/userSchemas";
+import { usersTable, ownersTable, walkersTable, adminsTable } from "../db/schema";
+import { UserRegistration, UserLogin } from "../schemas/authSchemas";
 import { handleDrizzleError } from "./drizzleErrorHandler";
 import { ServiceError } from "./serviceError";
+import { getOwnerProfileService } from "./ownerService";
+import { getWalkerProfileService } from "./walkerService";
 // import bcrypt from "bcryptjs"; // DESHABILITADO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
 
 // async function hash(value: string): Promise<string> {
@@ -16,17 +18,46 @@ import { ServiceError } from "./serviceError";
 // }
 
 export async function registerUserService(userData: UserRegistration) {
-    try {
-        // ADVERTENCIA: Guardando contraseña en texto plano - SOLO PARA DESARROLLO
-        const insertResult = await db.insert(usersTable).values({
-            name: userData.name, 
-            lastname: userData.lastname,
-            age: userData.age,
-            email: userData.email,
-            password: userData.password, // Sin hashear - NO USAR EN PRODUCCIÓN
-          }).$returningId();
+  try {
+    // 1. Crear usuario en tabla users
+    const [newUser] = await db.insert(usersTable).values({
+      email: userData.email,
+      password: userData.password, // ADVERTENCIA: Sin hashear - SOLO PARA DESARROLLO
+      role: userData.role,
+    }).$returningId();
 
-          return insertResult[0];
+    const userId = newUser.id;
+
+    // 2. Crear perfil según el rol
+    let profileId: number;
+    if (userData.role === 'owner') {
+      const [owner] = await db.insert(ownersTable).values({
+        userId,
+        name: userData.name,
+        lastname: userData.lastname,
+        location: userData.location,
+      }).$returningId();
+      profileId = owner.id;
+    } else if (userData.role === 'walker') {
+      const [walker] = await db.insert(walkersTable).values({
+        userId,
+        name: userData.name,
+        lastname: userData.lastname,
+        location: userData.location,
+      }).$returningId();
+      profileId = walker.id;
+    } else if (userData.role === 'admin') {
+      const [admin] = await db.insert(adminsTable).values({
+        userId,
+        name: userData.name,
+        lastname: userData.lastname,
+      }).$returningId();
+      profileId = admin.id;
+    } else {
+      throw new ServiceError("INVALID_USERNAME_OR_PASSWORD");
+    }
+
+    return { userId, profileId, role: userData.role };
   } catch (error) {
     handleDrizzleError(error);
   }
@@ -36,11 +67,12 @@ export async function loginUserService(LoginData: UserLogin) {
   const { email, password } = LoginData;
 
   try {
+    // 1. Buscar usuario
     const [user] = await db
       .select()
       .from(usersTable)
       .where(eq(usersTable.email, email))
-      .limit(1) 
+      .limit(1)
       .execute();
 
     if (!user) {
@@ -51,11 +83,32 @@ export async function loginUserService(LoginData: UserLogin) {
     const isPasswordValid = password === user.password;
 
     if (!isPasswordValid) {
-        throw new ServiceError("INVALID_USERNAME_OR_PASSWORD")
+      throw new ServiceError("INVALID_USERNAME_OR_PASSWORD");
     }
-    return user;
+
+    // 2. Obtener datos del perfil según el rol
+    let profile;
+    if (user.role === 'owner') {
+      profile = await getOwnerProfileService(user.id);
+    } else if (user.role === 'walker') {
+      profile = await getWalkerProfileService(user.id);
+    } else if (user.role === 'admin') {
+      [profile] = await db
+        .select()
+        .from(adminsTable)
+        .where(eq(adminsTable.userId, user.id))
+        .limit(1)
+        .execute();
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      profile,
+    };
   } catch (error) {
-    handleDrizzleError(error)
+    handleDrizzleError(error);
   }
 }
 
@@ -64,16 +117,19 @@ export async function getAllUsersService() {
     const allUsers = await db
       .select({
         id: usersTable.id,
-        name: usersTable.name,
-        lastname: usersTable.lastname,
-        age: usersTable.age,
-        email: usersTable.email
+        email: usersTable.email,
+        role: usersTable.role,
+        isActive: usersTable.isActive,
       })
       .from(usersTable)
       .execute();
-    
+
     return allUsers;
   } catch (error) {
     handleDrizzleError(error);
   }
 }
+
+// NOTA: Las funciones de actualización de perfiles se movieron a:
+// - updateOwnerProfileService -> ownerService.ts
+// - updateWalkerProfileService -> walkerService.ts

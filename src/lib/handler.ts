@@ -34,7 +34,7 @@ export function handler<TRequest extends ZodSchema,TResponse extends ZodSchema>
     try {
       const response = await options.handler(parsedReq?.data);
       if (response instanceof HttpError) {
-        res.status(response.status).send({ code: response.message });
+        res.status(response.status).json({ error: response.message, code: response.message });
         return;
       }
       if (options.res && response) {
@@ -46,7 +46,7 @@ export function handler<TRequest extends ZodSchema,TResponse extends ZodSchema>
       console.error("Handler error:", error);
       res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .send({ error: "Internal Server Error" });
+        .json({ error: "Internal Server Error", message: "Internal Server Error" });
     }
   };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `pets` ADD `breed` varchar(255);

@@ -1,5 +1,55 @@
-/dist
+# Dependencies
 /node_modules
-.vscode/*
+node_modules/
+
+# Build
+/dist
+dist/
+
+# Environment
 .env
-schemas/
+.env.local
+.env.*.local
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads temporales
+/uploads
+*.tmp
+
+# Migraciones manuales (usar Drizzle)
+migrations/*.sql
+!migrations/RUN_MIGRATIONS.sql
+add_*.sql
+
+# Schemas duplicados (usar src/schemas/)
+schemas/*.js
+schemas/*.json
+/schemas
+
+# Scripts temporales (mantener solo los importantes)
+/scripts
+!scripts/seed.ts
+!scripts/viewUsers.ts

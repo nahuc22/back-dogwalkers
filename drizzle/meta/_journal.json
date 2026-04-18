@@ -22,6 +22,34 @@
       "when": 1733441277272,
       "tag": "0002_userSchema",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1776278011627,
+      "tag": "0003_light_frank_castle",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1776386284728,
+      "tag": "0004_bored_lake",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1776439238554,
+      "tag": "0005_fair_phantom_reporter",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1776460068424,
+      "tag": "0006_cool_vapor",
+      "breakpoints": true
     }
   ]
 }

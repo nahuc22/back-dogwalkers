@@ -1,5 +1,5 @@
 export class ServiceError extends Error {
-    constructor(public readonly code: 'DUPLICATE_ENTRY' | "INVALID_USERNAME_OR_PASSWORD") {
+    constructor(public readonly code: 'DUPLICATE_ENTRY' | "INVALID_USERNAME_OR_PASSWORD" | "USER_NOT_OWNER") {
       super()
     }
   }

@@ -3,11 +3,13 @@ import { registerUser, loginUser, getAllUsers } from "../controllers/userControl
 
 const userRoutes = Router();
 
-// localhost:3001/api/users/register
+// Autenticación y gestión de usuarios
 userRoutes.post("/register", registerUser);
-// localhost:3001/api/users/login
 userRoutes.post("/login", loginUser);
-// localhost:3001/api/users
 userRoutes.get("/", getAllUsers);
+
+// NOTA: Las rutas de owners, walkers y pets se movieron a:
+// - /api/owners/* (ver ownerRoutes.ts)
+// - /api/walkers/* (ver walkerRoutes.ts)
 
 export default userRoutes;

@@ -1,0 +1,1 @@
+ALTER TABLE `walkers` ADD `price` decimal(10,2) DEFAULT '5.00';

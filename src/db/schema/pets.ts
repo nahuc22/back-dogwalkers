@@ -1,16 +1,17 @@
-import { int, mysqlTable, serial, varchar, text, timestamp } from 'drizzle-orm/mysql-core';
-import { usersTable } from './users';
+import { int, bigint, mysqlTable, serial, varchar, text, boolean, mysqlEnum } from 'drizzle-orm/mysql-core';
+import { ownersTable } from './owners';
 
 export const petsTable = mysqlTable('pets', {
   id: serial().primaryKey(),
-  ownerId: int('owner_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
-  name: varchar({ length: 100 }).notNull(),
-  breed: varchar({ length: 100 }),
+  ownerId: bigint({ mode: 'number', unsigned: true }).notNull().references(() => ownersTable.id, { onDelete: 'cascade' }),
+  name: varchar({ length: 255 }).notNull(),
+  breed: varchar({ length: 255 }),
   age: int(),
-  size: varchar({ length: 20 }), // 'small', 'medium', 'large'
-  weight: int(), // en kg
-  specialNotes: text('special_notes'), // alergias, comportamiento, etc.
-  photoUrl: varchar('photo_url', { length: 500 }),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+  type: mysqlEnum(['perro', 'gato', 'otro']).notNull().default('perro'),
+  size: mysqlEnum(['pequeño', 'mediano', 'grande']),
+  isCastrated: boolean(),
+  getsAlongWithOthers: boolean(),
+  medicalCondition: text(),
+  specifications: text(),
+  profileImage: varchar({ length: 500 }),
 });
