@@ -28,6 +28,15 @@ app.get("/info", (req, res) => {
     res.send("Estoy aquí");
 });
 
+// Health check endpoint - para despertar el servidor y verificar estado
+app.get("/health", (req, res) => {
+    res.json({ 
+        status: "ok", 
+        message: "Server is running",
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.use("/api", router);
 
 app.listen(PORT, '0.0.0.0', () => {
