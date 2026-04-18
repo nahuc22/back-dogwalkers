@@ -43,6 +43,13 @@ export const uploadImage = async (
   publicId?: string
 ): Promise<CloudinaryUploadResult> => {
   try {
+    console.log('☁️ Cloudinary upload started:', { folder, publicId });
+    console.log('☁️ Config:', {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      has_api_key: !!process.env.CLOUDINARY_API_KEY,
+      has_api_secret: !!process.env.CLOUDINARY_API_SECRET,
+    });
+    
     const options: any = {
       folder: `dogwalkers/${folder}`,
       resource_type: 'image',
@@ -77,9 +84,14 @@ export const uploadImage = async (
       height: result.height,
       bytes: result.bytes,
     };
-  } catch (error) {
-    console.error('Error uploading to Cloudinary:', error);
-    throw new Error('Failed to upload image to Cloudinary');
+  } catch (error: any) {
+    console.error('❌ Cloudinary upload error:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      http_code: error.http_code,
+      name: error.name,
+    });
+    throw new Error(`Failed to upload image to Cloudinary: ${error.message}`);
   }
 };
 
