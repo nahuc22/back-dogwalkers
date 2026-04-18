@@ -55,7 +55,11 @@ export async function getAllPetsService(location?: string, limit: number = 20) {
       })
       .from(petsTable)
       .innerJoin(ownersTable, eq(petsTable.ownerId, ownersTable.id))
-      .where(location ? sql`${ownersTable.location} LIKE ${`%${location}%`}` : sql`1=1`)
+      .where(
+        location 
+          ? sql`(${ownersTable.location} LIKE ${`%${location}%`} OR ${ownersTable.location} IS NULL OR ${ownersTable.location} = '')`
+          : sql`1=1`
+      )
       .limit(limit)
       .execute();
 

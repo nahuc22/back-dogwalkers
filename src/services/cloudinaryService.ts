@@ -10,6 +10,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Log para verificar configuración (solo en desarrollo)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('☁️ Cloudinary configured:', {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY ? '✅ Set' : '❌ Missing',
+    api_secret: process.env.CLOUDINARY_API_SECRET ? '✅ Set' : '❌ Missing',
+  });
+}
+
 export interface CloudinaryUploadResult {
   public_id: string;
   secure_url: string;
