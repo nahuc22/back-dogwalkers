@@ -1,7 +1,7 @@
 import { handler, HttpError } from "../lib/handler";
-import { userLoginSchema, userRegistrationSchema } from "../schemas/authSchemas";
+import { userLoginSchema, userRegistrationSchema, firebaseAuthSchema } from "../schemas/authSchemas";
 import { ServiceError } from "../services/serviceError";
-import { registerUserService, loginUserService, getAllUsersService } from "../services/userService";
+import { registerUserService, loginUserService, getAllUsersService, firebaseAuthService } from "../services/userService";
 import { z } from "zod";
 
 export const registerUser = handler({
@@ -53,6 +53,27 @@ export const getAllUsers = handler({
       const users = await getAllUsersService();
       return users;
     } catch (error) {
+      if (error instanceof ServiceError) {
+        return new HttpError(400, error.code);
+      } else {
+        throw error;
+      }
+    }
+  },
+});
+
+export const firebaseAuth = handler({
+  req: z.object({ body: firebaseAuthSchema }),
+  res: z.object({ userId: z.number(), email: z.string(), role: z.enum(['owner', 'walker', 'admin']), profile: z.any() }),
+  async handler(req) {
+    try {
+      console.log('🔐 Firebase Auth Request:', { role: req.body.role, hasToken: !!req.body.idToken });
+      const authData = req.body;
+      const user = await firebaseAuthService(authData);
+      console.log('✅ Firebase Auth Success:', { userId: user.userId, email: user.email });
+      return user;
+    } catch (error) {
+      console.error('❌ Firebase Auth Error:', error);
       if (error instanceof ServiceError) {
         return new HttpError(400, error.code);
       } else {

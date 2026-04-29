@@ -20,6 +20,15 @@ export const userLoginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+/**
+ * Schema para Firebase Auth
+ */
+export const firebaseAuthSchema = z.object({
+  idToken: z.string().min(1, 'Firebase ID token is required'),
+  role: z.enum(['owner', 'walker']).default('owner'),
+});
+
 // Tipos TypeScript inferidos
 export type UserRegistration = z.infer<typeof userRegistrationSchema>;
 export type UserLogin = z.infer<typeof userLoginSchema>;
+export type FirebaseAuth = z.infer<typeof firebaseAuthSchema>;

@@ -55,6 +55,11 @@ export const getPetsByOwner = handler({
   async handler(req) {
     try {
       const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return new HttpError(400, 'Invalid userId parameter');
+      }
+      
       const pets = await getPetsByOwnerService(userId);
       return pets;
     } catch (error) {

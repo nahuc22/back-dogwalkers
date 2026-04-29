@@ -4,6 +4,7 @@ import imageRoutes from "./imageRoutes";
 import ownerRoutes from "./ownerRoutes";
 import walkerRoutes from "./walkerRoutes";
 import petRoutes from "./petRoutes";
+import bookingRoutes from "./bookingRoutes";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/images", imageRoutes);
 router.use("/owners", ownerRoutes);
 router.use("/walkers", walkerRoutes);
 router.use("/pets", petRoutes);
+router.use("/bookings", bookingRoutes);
 
 export default router;

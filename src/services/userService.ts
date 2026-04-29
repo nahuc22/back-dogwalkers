@@ -1,11 +1,12 @@
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { usersTable, ownersTable, walkersTable, adminsTable } from "../db/schema";
-import { UserRegistration, UserLogin } from "../schemas/authSchemas";
+import { UserRegistration, UserLogin, FirebaseAuth } from "../schemas/authSchemas";
 import { handleDrizzleError } from "./drizzleErrorHandler";
 import { ServiceError } from "./serviceError";
 import { getOwnerProfileService } from "./ownerService";
 import { getWalkerProfileService } from "./walkerService";
+import { verifyFirebaseToken } from "./firebaseService";
 // import bcrypt from "bcryptjs"; // DESHABILITADO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
 
 // async function hash(value: string): Promise<string> {
@@ -126,6 +127,117 @@ export async function getAllUsersService() {
 
     return allUsers;
   } catch (error) {
+    handleDrizzleError(error);
+  }
+}
+
+export async function firebaseAuthService(authData: FirebaseAuth) {
+  const { idToken, role } = authData;
+  
+  try {
+    // Verificar el token con Firebase
+    const firebaseUser = await verifyFirebaseToken(idToken);
+    
+    if (!firebaseUser.email) {
+      throw new ServiceError("INVALID_USERNAME_OR_PASSWORD");
+    }
+
+    const { uid: firebaseUid, email, name } = firebaseUser;
+
+    // Buscar si el usuario ya existe por firebaseUid o email
+    const [existingUser] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.firebaseUid, firebaseUid))
+      .limit(1)
+      .execute();
+
+    // Si no se encuentra por firebaseUid, buscar por email
+    let userByEmail = null;
+    if (!existingUser) {
+      [userByEmail] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.email, email))
+        .limit(1)
+        .execute();
+    }
+
+    const foundUser = existingUser || userByEmail;
+
+    if (foundUser) {
+      // Si el usuario existe pero no tiene firebaseUid, actualizarlo
+      if (!foundUser.firebaseUid && firebaseUid) {
+        await db
+          .update(usersTable)
+          .set({ firebaseUid })
+          .where(eq(usersTable.id, foundUser.id))
+          .execute();
+      }
+
+      // Usuario existente - hacer login
+      let profile;
+      if (foundUser.role === 'owner') {
+        profile = await getOwnerProfileService(foundUser.id);
+      } else if (foundUser.role === 'walker') {
+        profile = await getWalkerProfileService(foundUser.id);
+      }
+
+      return {
+        userId: foundUser.id,
+        email: foundUser.email,
+        role: foundUser.role,
+        profile,
+      };
+    }
+
+    // Usuario nuevo - registrar
+    // Separar nombre completo en nombre y apellido
+    const nameParts = (name || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const [newUser] = await db.insert(usersTable).values({
+      email,
+      firebaseUid,
+      role,
+      name: firstName,
+      lastname: lastName,
+    }).$returningId();
+
+    const userId = newUser.id;
+
+    // Crear perfil según el rol
+    if (role === 'owner') {
+      await db.insert(ownersTable).values({
+        userId,
+        name: firstName,
+        lastname: lastName,
+      }).$returningId();
+    } else {
+      await db.insert(walkersTable).values({
+        userId,
+        name: firstName,
+        lastname: lastName,
+      }).$returningId();
+    }
+
+    // Obtener el perfil completo
+    let profile;
+    if (role === 'owner') {
+      profile = await getOwnerProfileService(userId);
+    } else {
+      profile = await getWalkerProfileService(userId);
+    }
+
+    return {
+      userId,
+      email,
+      role,
+      profile,
+    };
+  } catch (error) {
+    console.error('Firebase Auth Error:', error);
     handleDrizzleError(error);
   }
 }

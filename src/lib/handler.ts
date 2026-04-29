@@ -43,7 +43,8 @@ export function handler<TRequest extends ZodSchema,TResponse extends ZodSchema>
         res.status(StatusCodes.OK).end();
       }
     } catch (error) {
-      console.error("Handler error:", error);
+      console.error("❌ Handler error:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
       res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ error: "Internal Server Error", message: "Internal Server Error" });

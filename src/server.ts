@@ -2,8 +2,17 @@ import express from "express";
 import bodyParser from "body-parser"; // opcional si usas express.json()
 import router from "./router/router"; // Importa tus rutas
 import dotenv from "dotenv";
+import { initializeFirebase } from "./services/firebaseService";
 
 dotenv.config();
+
+// Inicializar Firebase Admin
+try {
+  initializeFirebase();
+} catch (error) {
+  console.error('⚠️  Error al inicializar Firebase:', error);
+  console.log('ℹ️  La app funcionará sin Firebase Auth');
+}
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
