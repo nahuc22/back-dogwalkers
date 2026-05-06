@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { ownersTable } from "../db/schema";
 import { UpdateOwnerProfile } from "../schemas/ownerSchemas";
 import { handleDrizzleError } from "./drizzleErrorHandler";
+import { parseLocation } from "../utils/locationUtils";
 
 /**
  * Obtener perfil de owner por userId
@@ -27,9 +28,25 @@ export async function getOwnerProfileService(userId: number) {
  */
 export async function updateOwnerProfileService(userId: number, profileData: UpdateOwnerProfile) {
   try {
+    // Si se actualiza la ubicación, extraer provincia y ciudad
+    const dataToUpdate = { ...profileData };
+    if (profileData.location) {
+      const { province, city } = parseLocation(profileData.location);
+      dataToUpdate.province = province || undefined;
+      dataToUpdate.city = city || undefined;
+    }
+
+    // Convertir coordenadas de string a número si existen
+    if (profileData.latitude) {
+      dataToUpdate.latitude = profileData.latitude;
+    }
+    if (profileData.longitude) {
+      dataToUpdate.longitude = profileData.longitude;
+    }
+
     await db
       .update(ownersTable)
-      .set(profileData)
+      .set(dataToUpdate)
       .where(eq(ownersTable.userId, userId))
       .execute();
 

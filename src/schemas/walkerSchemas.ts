@@ -7,6 +7,11 @@ export const updateWalkerProfileSchema = z.object({
   name: z.string().min(1).optional(),
   lastname: z.string().optional(),
   location: z.string().optional(),
+  address: z.string().optional(), // Dirección exacta (ej: "Batalla de Suipacha 1284")
+  province: z.string().optional(), // Provincia (ej: "Tucumán")
+  city: z.string().optional(), // Ciudad (ej: "San Miguel de Tucumán")
+  latitude: z.string().optional(), // Coordenada GPS (decimal como string)
+  longitude: z.string().optional(), // Coordenada GPS (decimal como string)
   profileImage: z.string().optional(),
   coverImage: z.string().optional(), // Imagen de portada/presentación
   description: z.string().optional(), // Descripción profesional
@@ -33,6 +38,9 @@ export const createWalkerSchema = z.object({
  */
 export const walkerSearchQuerySchema = z.object({
   location: z.string().optional(),
+  latitude: z.string().optional(), // Latitud del usuario para búsqueda por distancia
+  longitude: z.string().optional(), // Longitud del usuario para búsqueda por distancia
+  radius: z.string().optional(), // Radio de búsqueda en km (default: 10)
   limit: z.string().optional(),
   q: z.string().optional(), // Para búsqueda por texto
 });

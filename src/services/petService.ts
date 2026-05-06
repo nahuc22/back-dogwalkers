@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { eq, sql } from "drizzle-orm";
-import { petsTable, ownersTable } from "../db/schema";
+import { petsTable, ownersTable, usersTable } from "../db/schema";
 import { Pet } from "../schemas/userSchemas";
 import { handleDrizzleError } from "./drizzleErrorHandler";
 import { ServiceError } from "./serviceError";
@@ -50,15 +50,24 @@ export async function getAllPetsService(location?: string, limit: number = 20) {
         ownerName: ownersTable.name,
         ownerLastname: ownersTable.lastname,
         ownerLocation: ownersTable.location,
+        ownerAddress: ownersTable.address,
+        ownerCity: ownersTable.city,
+        ownerProvince: ownersTable.province,
+        latitude: ownersTable.latitude,
+        longitude: ownersTable.longitude,
         ownerProfileImage: ownersTable.profileImage,
         ownerUserId: ownersTable.userId,
       })
       .from(petsTable)
       .innerJoin(ownersTable, eq(petsTable.ownerId, ownersTable.id))
+      .innerJoin(usersTable, eq(ownersTable.userId, usersTable.id))
       .where(
-        location 
-          ? sql`(${ownersTable.location} LIKE ${`%${location}%`} OR ${ownersTable.location} IS NULL OR ${ownersTable.location} = '')`
-          : sql`1=1`
+        sql`${usersTable.isActive} = 1 AND (
+          ${location 
+            ? sql`${ownersTable.location} LIKE ${`%${location}%`} OR ${ownersTable.location} IS NULL OR ${ownersTable.location} = ''`
+            : sql`1=1`
+          }
+        )`
       )
       .limit(limit)
       .execute();

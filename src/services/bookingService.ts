@@ -18,6 +18,9 @@ export async function createBookingService(bookingData: {
   pricePerPet: number;
 }) {
   try {
+    console.log('🔍 Backend recibió fecha:', bookingData.date);
+    console.log('📦 Datos completos de reserva:', bookingData);
+    
     // Calcular precio total
     const totalPrice = bookingData.pricePerPet * bookingData.petIds.length;
 

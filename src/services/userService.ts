@@ -80,6 +80,11 @@ export async function loginUserService(LoginData: UserLogin) {
       throw new ServiceError("INVALID_USERNAME_OR_PASSWORD");
     }
 
+    // Verificar si el usuario está activo
+    if (user.isActive === false || user.isActive === null) {
+      throw new ServiceError("USER_INACTIVE");
+    }
+
     // ADVERTENCIA: Comparación en texto plano - SOLO PARA DESARROLLO
     const isPasswordValid = password === user.password;
 
@@ -166,6 +171,11 @@ export async function firebaseAuthService(authData: FirebaseAuth) {
     const foundUser = existingUser || userByEmail;
 
     if (foundUser) {
+      // Verificar si el usuario está activo
+      if (foundUser.isActive === false || foundUser.isActive === null) {
+        throw new ServiceError("USER_INACTIVE");
+      }
+
       // Si el usuario existe pero no tiene firebaseUid, actualizarlo
       if (!foundUser.firebaseUid && firebaseUid) {
         await db
