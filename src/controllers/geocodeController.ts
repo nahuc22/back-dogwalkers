@@ -27,6 +27,8 @@ export const autocompleteAddress = handler({
             location: location || '-26.8241,-65.2226',
             radius: radius || '50000',
             strictbounds: false,
+            // No especificar 'types' permite direcciones exactas con números
+            // Si querés forzar solo direcciones: types: 'address'
           },
         }
       );
@@ -67,6 +69,39 @@ export const getPlaceDetails = handler({
     } catch (error: any) {
       console.error('Error en place details:', error.response?.data || error.message);
       throw new HttpError(500, 'Error al obtener detalles del lugar');
+    }
+  },
+});
+
+// Reverse Geocoding: coordenadas → dirección (CLAVE para selector de mapa)
+export const reverseGeocode = handler({
+  req: z.object({
+    query: z.object({
+      latitude: z.string(),
+      longitude: z.string(),
+    })
+  }),
+  res: z.any(),
+  async handler(req) {
+    try {
+      const { latitude, longitude } = req.query;
+      
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json`,
+        {
+          params: {
+            latlng: `${latitude},${longitude}`,
+            key: process.env.GOOGLE_MAPS_API_KEY,
+            language: 'es',
+            result_type: 'street_address|route|premise', // Priorizar direcciones exactas
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error en reverse geocode:', error.response?.data || error.message);
+      throw new HttpError(500, 'Error al obtener dirección desde coordenadas');
     }
   },
 });

@@ -10,8 +10,8 @@ export const updateOwnerProfileSchema = z.object({
   address: z.string().optional(), // Dirección exacta (ej: "Batalla de Suipacha 1284")
   province: z.string().optional(), // Provincia (ej: "Tucumán")
   city: z.string().optional(), // Ciudad (ej: "San Miguel de Tucumán")
-  latitude: z.string().optional(), // Coordenada GPS (decimal como string)
-  longitude: z.string().optional(), // Coordenada GPS (decimal como string)
+  latitude: z.union([z.string(), z.number(), z.null()]).optional(), // Coordenada GPS
+  longitude: z.union([z.string(), z.number(), z.null()]).optional(), // Coordenada GPS
   profileImage: z.string().optional(),
   description: z.string().optional(),
   phone: z.string().optional(),

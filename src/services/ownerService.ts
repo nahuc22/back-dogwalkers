@@ -29,19 +29,19 @@ export async function getOwnerProfileService(userId: number) {
 export async function updateOwnerProfileService(userId: number, profileData: UpdateOwnerProfile) {
   try {
     // Si se actualiza la ubicación, extraer provincia y ciudad
-    const dataToUpdate = { ...profileData };
+    const dataToUpdate: any = { ...profileData };
     if (profileData.location) {
       const { province, city } = parseLocation(profileData.location);
       dataToUpdate.province = province || undefined;
       dataToUpdate.city = city || undefined;
     }
 
-    // Convertir coordenadas de string a número si existen
-    if (profileData.latitude) {
-      dataToUpdate.latitude = profileData.latitude;
+    // Convertir coordenadas a string para la base de datos (decimal)
+    if (profileData.latitude !== undefined) {
+      dataToUpdate.latitude = profileData.latitude !== null ? String(profileData.latitude) : null;
     }
-    if (profileData.longitude) {
-      dataToUpdate.longitude = profileData.longitude;
+    if (profileData.longitude !== undefined) {
+      dataToUpdate.longitude = profileData.longitude !== null ? String(profileData.longitude) : null;
     }
 
     await db
