@@ -24,11 +24,15 @@ export const addPet = handler({
 });
 
 // Obtener todos los perros disponibles (para walkers)
+// Acepta coordenadas opcionales para calcular distancia real
 export const getAllPets = handler({
   req: z.object({ 
     query: z.object({ 
       location: z.string().optional(),
-      limit: z.string().optional()
+      limit: z.string().optional(),
+      latitude: z.string().optional(),
+      longitude: z.string().optional(),
+      maxDistance: z.string().optional()
     }).optional()
   }),
   res: z.array(z.any()),
@@ -36,7 +40,11 @@ export const getAllPets = handler({
     try {
       const location = req.query?.location;
       const limit = req.query?.limit ? parseInt(req.query.limit) : 20;
-      const pets = await getAllPetsService(location, limit);
+      const latitude = req.query?.latitude ? parseFloat(req.query.latitude) : undefined;
+      const longitude = req.query?.longitude ? parseFloat(req.query.longitude) : undefined;
+      const maxDistance = req.query?.maxDistance ? parseFloat(req.query.maxDistance) : 50;
+      
+      const pets = await getAllPetsService(location, limit, latitude, longitude, maxDistance);
       return pets;
     } catch (error) {
       if (error instanceof ServiceError) {

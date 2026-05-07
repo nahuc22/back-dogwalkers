@@ -33,7 +33,14 @@ export async function addPetService(userId: number, petData: Pet) {
 }
 
 // Obtener todos los perros disponibles (para walkers)
-export async function getAllPetsService(location?: string, limit: number = 20) {
+// Acepta coordenadas opcionales para calcular distancia real
+export async function getAllPetsService(
+  location?: string, 
+  limit: number = 20,
+  userLatitude?: number,
+  userLongitude?: number,
+  maxDistanceKm: number = 50 // Radio máximo de búsqueda en km
+) {
   try {
     const pets = await db
       .select({
@@ -61,18 +68,49 @@ export async function getAllPetsService(location?: string, limit: number = 20) {
       .from(petsTable)
       .innerJoin(ownersTable, eq(petsTable.ownerId, ownersTable.id))
       .innerJoin(usersTable, eq(ownersTable.userId, usersTable.id))
-      .where(
-        sql`${usersTable.isActive} = 1 AND (
-          ${location 
-            ? sql`${ownersTable.location} LIKE ${`%${location}%`} OR ${ownersTable.location} IS NULL OR ${ownersTable.location} = ''`
-            : sql`1=1`
-          }
-        )`
-      )
-      .limit(limit)
+      .where(sql`${usersTable.isActive} = 1`)
       .execute();
 
-    return pets;
+    // Si hay coordenadas del walker, calcular distancia y filtrar
+    if (userLatitude && userLongitude) {
+      const petsWithDistance = pets
+        .map(pet => {
+          // Si la mascota tiene coordenadas, calcular distancia
+          if (pet.latitude && pet.longitude) {
+            const petLat = typeof pet.latitude === 'string' ? parseFloat(pet.latitude) : pet.latitude;
+            const petLon = typeof pet.longitude === 'string' ? parseFloat(pet.longitude) : pet.longitude;
+            
+            // Fórmula de Haversine para calcular distancia
+            const R = 6371; // Radio de la Tierra en km
+            const dLat = (petLat - userLatitude) * Math.PI / 180;
+            const dLon = (petLon - userLongitude) * Math.PI / 180;
+            const a = 
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(userLatitude * Math.PI / 180) * Math.cos(petLat * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c;
+            
+            return { ...pet, distance };
+          }
+          // Si no tiene coordenadas, asignar distancia muy alta
+          return { ...pet, distance: 9999 };
+        })
+        .filter(pet => pet.distance <= maxDistanceKm) // Filtrar por radio
+        .sort((a, b) => a.distance - b.distance) // Ordenar por distancia
+        .slice(0, limit); // Limitar resultados
+
+      return petsWithDistance;
+    }
+
+    // Si no hay coordenadas, usar filtro por texto (fallback)
+    if (location) {
+      return pets.filter(pet => 
+        pet.ownerLocation?.toLowerCase().includes(location.toLowerCase())
+      ).slice(0, limit);
+    }
+
+    return pets.slice(0, limit);
   } catch (error) {
     handleDrizzleError(error);
   }
