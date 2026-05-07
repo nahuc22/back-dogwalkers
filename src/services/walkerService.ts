@@ -65,8 +65,15 @@ export async function updateWalkerProfileService(userId: number, profileData: Up
 
 /**
  * Obtener todos los walkers
+ * Acepta coordenadas opcionales para calcular distancia real
  */
-export async function getAllWalkersService(location?: string, limit: number = 20) {
+export async function getAllWalkersService(
+  location?: string, 
+  limit: number = 20,
+  userLatitude?: number,
+  userLongitude?: number,
+  maxDistanceKm: number = 50 // Radio máximo de búsqueda en km
+) {
   try {
     const walkers = await db
       .select({
@@ -92,24 +99,51 @@ export async function getAllWalkersService(location?: string, limit: number = 20
       })
       .from(walkersTable)
       .innerJoin(usersTable, eq(walkersTable.userId, usersTable.id))
-      .where(
-        sql`${usersTable.isActive} = 1 AND (
-          ${location 
-            ? sql`(
-              ${walkersTable.province} LIKE ${`%${location}%`} OR 
-              ${walkersTable.city} LIKE ${`%${location}%`} OR 
-              ${walkersTable.location} LIKE ${`%${location}%`} OR 
-              ${walkersTable.location} IS NULL OR 
-              ${walkersTable.location} = ''
-            )`
-            : sql`1=1`
-          }
-        )`
-      )
-      .limit(limit)
+      .where(sql`${usersTable.isActive} = 1`)
       .execute();
 
-    return walkers;
+    // Si hay coordenadas del owner, calcular distancia y filtrar
+    if (userLatitude && userLongitude) {
+      const walkersWithDistance = walkers
+        .map(walker => {
+          // Si el walker tiene coordenadas, calcular distancia
+          if (walker.latitude && walker.longitude) {
+            const walkerLat = typeof walker.latitude === 'string' ? parseFloat(walker.latitude) : walker.latitude;
+            const walkerLon = typeof walker.longitude === 'string' ? parseFloat(walker.longitude) : walker.longitude;
+            
+            // Fórmula de Haversine para calcular distancia
+            const R = 6371; // Radio de la Tierra en km
+            const dLat = (walkerLat - userLatitude) * Math.PI / 180;
+            const dLon = (walkerLon - userLongitude) * Math.PI / 180;
+            const a = 
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(userLatitude * Math.PI / 180) * Math.cos(walkerLat * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c;
+            
+            return { ...walker, distance };
+          }
+          // Si no tiene coordenadas, asignar distancia muy alta
+          return { ...walker, distance: 9999 };
+        })
+        .filter(walker => walker.distance <= maxDistanceKm) // Filtrar por radio
+        .sort((a, b) => a.distance - b.distance) // Ordenar por distancia
+        .slice(0, limit); // Limitar resultados
+
+      return walkersWithDistance;
+    }
+
+    // Si no hay coordenadas, usar filtro por texto (fallback)
+    if (location) {
+      return walkers.filter(walker => 
+        walker.location?.toLowerCase().includes(location.toLowerCase()) ||
+        walker.city?.toLowerCase().includes(location.toLowerCase()) ||
+        walker.province?.toLowerCase().includes(location.toLowerCase())
+      ).slice(0, limit);
+    }
+
+    return walkers.slice(0, limit);
   } catch (error) {
     handleDrizzleError(error);
   }

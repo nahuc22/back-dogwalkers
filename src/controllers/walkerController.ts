@@ -63,12 +63,16 @@ export const updateWalkerProfile = handler({
 
 /**
  * Obtener todos los walkers
+ * Acepta coordenadas opcionales para calcular distancia real
  */
 export const getAllWalkers = handler({
   req: z.object({ 
     query: z.object({ 
       location: z.string().optional(),
-      limit: z.string().optional() 
+      limit: z.string().optional(),
+      latitude: z.string().optional(),
+      longitude: z.string().optional(),
+      maxDistance: z.string().optional()
     }).optional() 
   }),
   res: z.array(z.any()),
@@ -76,9 +80,11 @@ export const getAllWalkers = handler({
     try {
       const location = req.query?.location;
       const limit = req.query?.limit ? parseInt(req.query.limit) : 20;
+      const latitude = req.query?.latitude ? parseFloat(req.query.latitude) : undefined;
+      const longitude = req.query?.longitude ? parseFloat(req.query.longitude) : undefined;
+      const maxDistance = req.query?.maxDistance ? parseFloat(req.query.maxDistance) : 50;
       
-      // Obtener walkers con filtro de location (incluye NULL/vacíos si se especifica location)
-      const walkers = await getAllWalkersService(location, limit);
+      const walkers = await getAllWalkersService(location, limit, latitude, longitude, maxDistance);
       return walkers;
     } catch (error) {
       if (error instanceof ServiceError) {
