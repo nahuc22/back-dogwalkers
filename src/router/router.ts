@@ -5,6 +5,7 @@ import ownerRoutes from "./ownerRoutes";
 import walkerRoutes from "./walkerRoutes";
 import petRoutes from "./petRoutes";
 import bookingRoutes from "./bookingRoutes";
+import geocodeRoutes from "./geocodeRoutes";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/owners", ownerRoutes);
 router.use("/walkers", walkerRoutes);
 router.use("/pets", petRoutes);
 router.use("/bookings", bookingRoutes);
+router.use("/geocode", geocodeRoutes);
 
 export default router;

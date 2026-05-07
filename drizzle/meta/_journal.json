@@ -71,6 +71,13 @@
       "when": 1776714367392,
       "tag": "0009_serious_the_initiative",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1778092968811,
+      "tag": "0010_tiny_silver_centurion",
+      "breakpoints": true
     }
   ]
 }
